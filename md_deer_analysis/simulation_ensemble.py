@@ -47,6 +47,7 @@ class SimulationEnsemble:
                                       sigma=sigma,
                                       num_bins=num_bins,
                                       bin_width=bin_width)
+            dist /= np.sum(dist)
         else:
             dist = {}
             for pair in self.pairs:
@@ -54,5 +55,23 @@ class SimulationEnsemble:
                                                 sigma=sigma,
                                                 num_bins=num_bins,
                                                 bin_width=bin_width)
+                dist[pair] /= np.sum(dist[pair])
         return dist
 
+    def re_sample(self, bins, sigma=0.25):
+        re_sampled_mems = np.random.choice(self.members,
+                                           self.num_members,
+                                           replace=True)
+
+        re_sampled = {}
+        for pair in self.pairs:
+            re_sampled[pair] = np.zeros(shape=(len(bins)))
+            for mem in re_sampled_mems:
+                re_sampled[pair] += self.get_distributions(bins,
+                                                           sigma,
+                                                           pair=pair,
+                                                           member=mem)
+            re_sampled[pair] /= np.sum(re_sampled[pair])
+            re_sampled[pair] = re_sampled[pair].tolist()
+
+        return re_sampled

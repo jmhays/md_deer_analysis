@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.stats import entropy
 
 
 def gaussian_smoothing(data, sigma, num_bins, bin_width):
@@ -15,3 +16,22 @@ def gaussian_smoothing(data, sigma, num_bins, bin_width):
             np.square(np.subtract(n * bin_width, data)), 2 * sigma**2)
         sim_hist[n] = norm * np.sum(np.exp(-arg_exp), axis=0)
     return sim_hist.tolist()
+
+
+def jensen_shannon(ps, qs):
+    nbins = len(ps)
+    if nbins != len(qs):
+        raise IndexError(
+            "The experimental num bins ({}) and simulation num bins ({}) are not equal".
+            format(len(qs), nbins))
+
+    # Normalization
+    # ps = np.divide(ps, np.sum(ps))
+    # qs = np.divide(qs, np.sum(qs))
+    ms = np.multiply(np.add(ps, qs), 0.5)
+
+    DPM = entropy(ps, ms)
+    DQM = entropy(qs, ms)
+
+    js = 0.5 * DPM + 0.5 * DQM
+    return js
