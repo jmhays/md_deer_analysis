@@ -72,6 +72,6 @@ class SimulationEnsemble:
                                                            pair=pair,
                                                            member=mem)
             re_sampled[pair] /= np.sum(re_sampled[pair])
-            re_sampled[pair] = re_sampled[pair].tolist()
+            # re_sampled[pair] = re_sampled[pair].tolist()
 
         return re_sampled
