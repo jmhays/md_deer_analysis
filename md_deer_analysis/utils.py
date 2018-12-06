@@ -1,5 +1,12 @@
 import numpy as np
-from scipy.stats import entropy
+
+
+def cross_entropy(p, q):
+    kl = 0
+    for i in range(len(p)):
+        if p[i] > 0 and q[i] > 0:
+            kl += p[i]*(np.log(p[i]) - np.log(q[i]))
+    return kl
 
 
 def gaussian_smoothing(data, sigma, num_bins, bin_width):
@@ -26,12 +33,12 @@ def jensen_shannon(ps, qs):
             format(len(qs), nbins))
 
     # Normalization
-    # ps = np.divide(ps, np.sum(ps))
-    # qs = np.divide(qs, np.sum(qs))
+    ps = np.divide(ps, np.sum(ps))
+    qs = np.divide(qs, np.sum(qs))
     ms = np.multiply(np.add(ps, qs), 0.5)
 
-    DPM = entropy(ps, ms)
-    DQM = entropy(qs, ms)
+    DPM = cross_entropy(ps, ms)
+    DQM = cross_entropy(qs, ms)
 
     js = 0.5 * DPM + 0.5 * DQM
     return js

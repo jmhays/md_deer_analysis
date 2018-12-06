@@ -19,6 +19,9 @@ class SimulationEnsemble:
 
         self.num_pairs = len(self.pairs)
         self.num_members = len(self.members)
+        self.num_bins = 0
+        self.distributions = {}
+        self.ensemble_average = {}
 
     def get_samples(self, pair=None, member=None):
         if pair and member:
@@ -36,41 +39,48 @@ class SimulationEnsemble:
                     (list(self.metadata[pair].values())))
         return data
 
-    def get_distributions(self, bins, sigma=0.25, pair=None, member=None):
+    def calculate_distributions(self, bins, sigma=0.25):
+
         num_bins = len(bins)
+        self.num_bins = num_bins
         bin_width = bins[1] - bins[0]
+        dist = {}
 
-        samples = self.get_samples(pair, member)
+        for pair in self.pairs:
+            dist[pair] = {}
+            for member in self.members:
+                dist[pair][member] = gaussian_smoothing(
+                    self.get_samples(pair, member),
+                    sigma=sigma,
+                    num_bins=num_bins,
+                    bin_width=bin_width
+                )
 
-        if pair:
-            dist = gaussian_smoothing(data=samples,
-                                      sigma=sigma,
-                                      num_bins=num_bins,
-                                      bin_width=bin_width)
-            dist /= np.sum(dist)
-        else:
-            dist = {}
-            for pair in self.pairs:
-                dist[pair] = gaussian_smoothing(data=samples[pair],
-                                                sigma=sigma,
-                                                num_bins=num_bins,
-                                                bin_width=bin_width)
-                dist[pair] /= np.sum(dist[pair])
-        return dist
+            self.ensemble_average[pair] = gaussian_smoothing(
+                self.get_samples(pair),
+                sigma=sigma,
+                num_bins=num_bins,
+                bin_width=bin_width
+            )
 
-    def re_sample(self, bins, sigma=0.25):
+        self.distributions = dist
+
+    def re_sample(self):
+        if not list(self.distributions.keys()):
+            raise IndexError("Distributions have not yet been calculated. "
+                             "Please calculate distributions for the ensemble before "
+                             "running resampling")
+
         re_sampled_mems = np.random.choice(self.members,
                                            self.num_members,
                                            replace=True)
 
         re_sampled = {}
         for pair in self.pairs:
-            re_sampled[pair] = np.zeros(shape=(len(bins)))
+            re_sampled[pair] = np.zeros(shape=self.num_bins)
             for mem in re_sampled_mems:
-                re_sampled[pair] += self.get_distributions(bins,
-                                                           sigma,
-                                                           pair=pair,
-                                                           member=mem)
+                re_sampled[pair] += self.distributions[pair][mem]
+
             re_sampled[pair] /= np.sum(re_sampled[pair])
             # re_sampled[pair] = re_sampled[pair].tolist()
 
