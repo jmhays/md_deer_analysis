@@ -4,7 +4,7 @@ from md_deer_analysis.utils import gaussian_smoothing
 
 
 class SimulationEnsemble:
-    def __init__(self, json_filename):
+    def __init__(self, json_filename, name="myensemble"):
         """
         Loads and manipulates a simulation ensemble.
 
@@ -22,6 +22,11 @@ class SimulationEnsemble:
         self.num_bins = 0
         self.distributions = {}
         self.ensemble_average = {}
+
+        self.__name = name
+
+    def get_name(self):
+        return self.__name
 
     def get_samples(self, pair=None, member=None):
         if pair and member:

@@ -33,12 +33,19 @@ class JS:
         # Initialize the simulation histograms
         self.sim.calculate_distributions(bins=bins, sigma=sigma)
 
-    def get_average_js(self):
-        js = {}
+        self.js_bootstrap = {}
+        self.js_avg = {}
+
         for pair in self.pairs:
-            js[pair] = jensen_shannon(self.sim.ensemble_average[pair],
-                                      self.deer_distributions[pair])
-        return js
+            self.js_avg[pair] = jensen_shannon(self.sim.ensemble_average[pair],
+                                               self.deer_distributions[pair])
+
+    def js_single_member(self, pair, member="mem_0"):
+        return jensen_shannon(self.deer_distributions[pair],
+                              self.sim.distributions[pair][member])
+
+    def get_name(self):
+        return self.sim.get_name()
 
     def bootstrap(self, n=1000):
         js = {}
@@ -53,23 +60,29 @@ class JS:
 
         for pair in self.pairs:
             js[pair].sort()
-        return js
+
+        self.js_bootstrap = js
+
+    def quantiles(self, lower=0.25, upper=0.75):
+        first_quantile = {}
+        last_quantile = {}
+        for pair in self.pairs:
+            first_quantile[pair] = np.quantile(
+                self.js_bootstrap[pair], q=lower)
+            last_quantile[pair] = np.quantile(self.js_bootstrap[pair], q=upper)
+        return first_quantile, last_quantile
 
 
-class PlotBootstrap:
-    def __init__(self, js_avg: dict, js_bootstrap: dict):
-        self.js_avg = js_avg
-        self.first_quartiles = {}
-        self.fourth_quartiles = {}
+def write_to_table(fnm, js_data: list):
+    with open(fnm, "w") as my_file:
+        my_file.write(
+            "Ensemble,Pair,Divergence,first_quartile,fourth_quartile\n")
 
-        for pair in self.js_avg.keys():
-            self.first_quartiles[pair] = np.quantile(js_bootstrap[pair], q=0.25)
-            self.fourth_quartiles[pair] = np.quantile(js_bootstrap[pair], q=0.75)
-
-    def write_to_table(self, fnm):
-        with open(fnm, "w") as myfile:
-            myfile.write("# pair\tjs\tfirst_quartile\tfourth_quartile\n")
-            for pair in self.js_avg.keys():
-                myfile.write("pair_{}\t{}\t{}\t{}\n".format(
-                    pair, self.js_avg[pair], self.first_quartiles[pair],
-                    self.fourth_quartiles[pair]))
+        for js in js_data:
+            ensemble_name = js.get_name()
+            first_quantile, last_quantile = js.quantiles()
+            for pair in js.pairs:
+                pair_name = pair.replace("_", "/")
+                my_file.write("{},{},{},{},{}\n".format(
+                    ensemble_name, pair_name, js.js_avg[pair],
+                    first_quantile[pair], last_quantile[pair]))
