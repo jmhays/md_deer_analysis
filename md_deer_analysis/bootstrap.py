@@ -47,13 +47,13 @@ class JS:
     def get_name(self):
         return self.sim.get_name()
 
-    def bootstrap(self, n=1000):
+    def bootstrap(self, n=1000, exclude=[]):
         js = {}
         for pair in self.pairs:
             js[pair] = np.zeros(shape=n)
 
         for i in range(n):
-            resampled = self.sim.re_sample()
+            resampled = self.sim.re_sample(exclude=exclude)
             for pair in self.pairs:
                 js[pair][i] = jensen_shannon(resampled[pair],
                                              self.deer_distributions[pair])

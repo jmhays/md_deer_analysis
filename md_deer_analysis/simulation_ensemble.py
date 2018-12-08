@@ -70,13 +70,18 @@ class SimulationEnsemble:
 
         self.distributions = dist
 
-    def re_sample(self):
+    def re_sample(self, exclude=[]):
         if not list(self.distributions.keys()):
             raise IndexError("Distributions have not yet been calculated. "
                              "Please calculate distributions for the ensemble before "
                              "running resampling")
 
-        re_sampled_mems = np.random.choice(self.members,
+        members = []
+        for member in self.members:
+            if member not in exclude:
+                members.append(member)
+
+        re_sampled_mems = np.random.choice(members,
                                            self.num_members,
                                            replace=True)
 

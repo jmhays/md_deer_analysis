@@ -15,13 +15,14 @@ def gaussian_smoothing(data, sigma, num_bins, bin_width):
     """
     n_samples = len(data)
 
-    norm = 1.0 / n_samples * np.sqrt(1.0 / (2 * np.pi * sigma**2))
+    # norm = 1.0 / n_samples * np.sqrt(1.0 / (2 * np.pi * sigma**2))
     sim_hist = np.zeros(shape=num_bins)
 
     for n in range(num_bins):
         arg_exp = np.divide(
             np.square(np.subtract(n * bin_width, data)), 2 * sigma**2)
-        sim_hist[n] = norm * np.sum(np.exp(-arg_exp), axis=0)
+        sim_hist[n] = np.sum(np.exp(-arg_exp), axis=0)  # * norm
+    sim_hist /= np.sum(sim_hist)
     return sim_hist.tolist()
 
 
