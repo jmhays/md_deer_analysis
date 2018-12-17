@@ -73,14 +73,14 @@ class JS:
         return first_quantile, last_quantile
 
 
-def write_to_table(fnm, js_data: list):
+def write_to_table(fnm, js_data: list, quantiles=[0.25, 0.75]):
     with open(fnm, "w") as my_file:
         my_file.write(
             "Ensemble,Pair,Divergence,first_quartile,fourth_quartile\n")
 
         for js in js_data:
             ensemble_name = js.get_name()
-            first_quantile, last_quantile = js.quantiles()
+            first_quantile, last_quantile = js.quantiles(lower=quantiles[0], upper=quantiles[1])
             for pair in js.pairs:
                 pair_name = pair.replace("_", "/")
                 my_file.write("{},{},{},{},{}\n".format(
